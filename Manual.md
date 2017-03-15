@@ -13,7 +13,7 @@
 
 1. Download the [WimLib](https://wimlib.net) library.
 2. Unpack it into an arbitrary folder, preferably `C:\My\WimLib`.
-3. Download the [WimLibScripts](https://github.com/FrankHeimes/WimLibScripts) scripts.
+3. Download the [WimLibScripts](https://github.com/FrankHeimes/WimLibScripts) repository.
 3. Place the scripts `backup.ps1` and `restore.ps1` into the same folder as `wimlib-imagex.exe` and `libwim-15.dll`.
 
 ## How to use
@@ -23,8 +23,6 @@ The following applies to both scripts:
 To execute the script, open the context menu for it and select *Run with PowerShell*
 ![Screenshot of Context Menu](./RunWithPowerShell.gif)
 This way, you don't need to modify the global ExecutionPolicy of the system.
-
-The script restarts itself with Administrator privileges if it is started from a limited account.
 
 Upon first invocation, the following security warning may appear:
 ![Screenshot of Security Warning](./SecurityWarning.gif)
@@ -36,6 +34,8 @@ http://go.microsoft.com/fwlink/?LinkID=135170. Do you want to change the executi
 [Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "N"):
 ```
 To continue the script, answer `Y`.
+
+The script restarts itself with Administrator privileges if it is started from a limited account.
 
 All scripts contain a configuration section with default parameters.
 You can run the scripts interactively or execute them using the default parameters.
@@ -61,7 +61,7 @@ The script contains a `--- Configuration ---` section with the following paramet
 | `$Global:wimFile` | `'M:\Backup\System.wim'` | The target WIM file to add the backup image to. This cannot be the volume to backup and it should not be on the same physical drive. |
 | `$Global:imageName` | Long date and time | A descriptive name for the new backup image. |
 
-##### WARNING
+### WARNING
 **When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!**
 
 ### Performance
@@ -83,7 +83,7 @@ The script contains a `--- Configuration ---` section with the following paramet
 | `$Global:wimFile` | `'M:\Backup\System.wim'` | The source WIM file to take the backup image from. This cannot reside on the volume to restore. |
 | `$Global:imageIndex` | 9999 | The image index in the WIM file to restore. If this number is too high, then the highest available index is picked. |
 
-##### WARNING
+### WARNING
 **When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct! This is particularly important for this restore script. With the wrong parameters you can easily damage your data or operating system beyond repair!**
 
 ### Performance
@@ -91,15 +91,16 @@ The restore operation yields about 140 GB per hour on an SSD.
 
 ### Known Issues
 The following are merely issues of the [WimLib](https://wimlib.net) library or the [WIM](https://de.wikipedia.org/wiki/Windows_Imaging_Format_Archive) file format as such, because the powershell scripts do nothing else but invoke `wimlib-imagex.exe`
-- The reported size of the images in the WIM does not reflect the size of the extracted files on the volume. According to my observation, the reported size is about 30% too large. This may cause the Restore.ps1 script to warn you about an allegedly insufficiantly large volume. Any hints about how to correctly determine the size of a WIM image are highly welcome. 
-- After restoring the backup of a Windows 10 partition of a USB drive to a volume on the internal hard drive, I noticed that the restored volume consumed about 3% more space. However, the file list of the original and the restored volumes as well as the cluster size were identical.
+- The reported size of the images in the WIM does not reflect the size of the extracted files on the volume. According to my observation, the reported size is about 30% too large. This may cause the `Restore.ps1` script to warn you about an allegedly insufficiantly large volume. Any hints about how to correctly determine the size of a WIM image are highly welcome. 
+- After restoring the backup of a Windows 10 partition of a USB drive to a volume on the internal hard drive, I noticed that the restored volume consumed about 3% more space. However, the file list of the original and the restored volumes as well as the cluster sizes were identical.
+- The Windows `DISM` command as well as the `Mount-WindowsImage` PowerShell cmdlet are supposedly able to mount a WIM image. But both report *Attempted to load a file with a wrong format* and the `dism.log` reports a *version/header mismatch* problem.
 
 ## Tipps
 ##### Browse and Extract
-Use the free [7-Zip](http://www.7-zip.org/) archiver to open, and browse a WIM file or to extract a limited number of files.
+Use the free [7-Zip](http://www.7-zip.org/) archiver to open and browse a WIM file or to extract a limited number of files.
 
 ##### Administer
-For administering one or more images of the WIM file, proceed as follows:
+For administering an image of the WIM file, proceed as follows:
 1. Open the Windows Disk Managment and create a new virtual disk.
 2. Format it as NTFS and assign a drive letter.
 3. Restore an image of the WIM file to that disk.
@@ -110,6 +111,6 @@ Due to the way a WIM file is structured, only your changes may increase its size
 
 ##### Quick Launch
 To allow a PowerShell script to run with a double-click, create a Windows Shortcut with this target:  
-`C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe –ExecutionPolicy Unrestricted –NoProfile –File C:\My\WimLib\lib\BackupSystem.ps1`
+`C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe â€“ExecutionPolicy Unrestricted â€“NoProfile â€“File C:\My\WimLib\lib\BackupSystem.ps1`
 
 But beware that Windows shortcuts always contain absolute paths! These may act surprisingly if running this script from the live system or a backup USB system.

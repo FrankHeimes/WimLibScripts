@@ -13,7 +13,7 @@ included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -31,8 +31,8 @@ interactive but strictly text based, or fully automated with preset parameters.
 
 ## Motivation
 
-Over the years, I had used *Acronis TrueImage*, *DriveImage XML*, *Norton GhostImage*, and the *Windows 7* builtin backup,
-non of which fully satisfied me. So I stumbled over several articles that describe the features of [WimLib](https://wimlib.net),
+Over the years, I had used *Acronis TrueImage*, *DriveImage XML*, *Norton GhostImage*, and the *Windows 7* built-in backup,
+none of which fully satisfied me. So I stumbled over several articles that describe the features of [WimLib](https://wimlib.net),
 which exploits the [WIM](https://de.wikipedia.org/wiki/Windows_Imaging_Format_Archive) file format
 that is also used by Microsoft to bundle its software releases.
 

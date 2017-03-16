@@ -43,19 +43,19 @@ that is also used by Microsoft to bundle its software releases.
  * it adds additional images as differential changes to the WIM file.
    So the size of the WIM file only increases by about a third of the size of the modified files.
  * it is ***very*** CPU efficient. While compressing the file data in parallel, it used all of my four cores to 99%.
- * the generated WIM file can easily be browsed and extracted using the free [7-Zip](http://www.7-zip.org/) program.
+ * the generated WIM file can easily be browsed and extracted using the free [7-Zip](http://www.7-zip.org/) archiver (version 16.04 or newer).
 
 Since the web pages I found merely describe the steps to manually issue a backup and how to restore an image,
 I wrote these scripts to make this a regular, easy and less error prone task.
 
 ## Manual
 
-For an explanation of the scripts, see the [MANUAL](MANUAL.md).
+For an explanation of the scripts, see the [Manual](Manual.md).
 
 ## License
 
 Copyright (c) 2017 Dr. Frank Heimes  
-See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
+See the [License](License.md) file for license rights and limitations (MIT).
 
 ## Support
 

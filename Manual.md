@@ -26,7 +26,7 @@ SOFTWARE.
 
 1. The scripts have been developed with PowerShell 5.0.  
    I don't know if they work with previous versions of PowerShell.
-2. The scripts use the [WimLib](https://wimlib.net) library. Download it from https://wimlib.net .
+2. The scripts use the [WimLib](https://wimlib.net) library. Download it from https://wimlib.net.
 3. To run the scripts `Backup.ps1` and `Restore.ps1`, you need Administrator privileges.
 4. To restore an image to the live Windows system, you need a bootable medium,
    e.g. a Windows volume on a USB drive or an installation CD.
@@ -147,12 +147,14 @@ because the PowerShell scripts do little more but invoke `wimlib-imagex.exe`
 the Windows `DISM` command reports the same figure.
 According to my observation, the reported size is about 30% too large.
 This may cause the `Restore.ps1` script to warn about an allegedly insufficiently large volume.
-Any hints about how to correctly determine the size of a WIM image are highly welcome. 
-- After restoring the backup of a Windows 10 partition of a USB drive to a volume on the internal hard drive,
-I noticed that the restored volume consumed about 3% more space.
-However, the file list of the original and the restored volumes as well as the cluster sizes were identical.
-On the other hand, the reported occupied space of a specific volume varies by several percent depending on whether it's live or passive.
-So I don't think this is a real issue.
+*Any hints about how to correctly determine the size of a WIM image are highly welcome.*
+- After restoring an image, I compared its space consumption - as displayed in the volume properties dialog -
+with that of the original volume and noticed that these always differ by a few percent.
+So I compared the exact file list and reported size using [WinDirStat](https://windirstat.net/) and the `ListImageContents.ps1` script
+and could confirm that the actual contents is always identical.
+So the consumed space, as reported by Windows, can safely be assumed to be merely an *educated guess*.
+- On a Windows 8.1 system, when restoring a volume, the `-Force` option of the `Format-Volume` cmdlet is ignored,
+resulting in an additional unnecessary confirmation query after the WIM file has been verified. On Windows 10, the option is respected.
 - The Windows `DISM` command as well as the `Mount-WindowsImage` PowerShell cmdlet are supposedly able to mount a WIM image.
 But both report *"Attempted to load a file with a wrong format"* and the `dism.log` reports a *"version/header mismatch"* problem.
 - When restoring an image, WimLib typically issues `[WARNING] Ignoring FILE_ATTRIBUTE_SPARSE_FILE of nn files`
@@ -160,23 +162,26 @@ for a small number `nn` of files. To my knowledge, this has no negative side eff
 
 ## Tips
 #### Browse and Extract
-Use the free [7-Zip](http://www.7-zip.org/) archiver to open and browse a WIM file or to extract a limited number of files.
+Use the free [7-Zip](http://www.7-zip.org/) archiver (version 16.04 or newer) to open and browse a WIM file or to extract a limited number of files.
 You will probably want to use the `Restore.ps1` script to extract the entire volume as this also recreates all file meta data and permissions.
 
 #### Administer
 For administering an image of the WIM file, proceed as follows:
-1. Open the Windows Disk Management and create a new virtual disk.
-2. Format it as NTFS and assign a drive letter.
-3. Restore an image of the WIM file to that disk.
-4. Inspect and/or modify its contents.
-5. Create a backup of the virtual disk and add it as new image to the WIM file.
+1. Open the Windows Disk Management and create a new virtual disk or shrink an existing volume to make space for a new *real* volume.
+2. Initialize the disk and create a new simple volume.
+3. Format the volume as NTFS and assign a drive letter.
+4. Restore an image of the WIM file to that disk.
+5. Inspect and/or modify its contents.
+6. Create a backup of the volume on the virtual disk and add it as new image to the WIM file.
 
 Due to the way a WIM file is structured, only your changes may increase its size.
 So leaving the old image in the WIM file usually does not waste (much) space.
 Of course, if you deleted substantial portions of the volume, you're better off creating a new WIM file.
 
 #### Quick Launch
-To allow a PowerShell script to run with a double-click, create a Windows Shortcut with this target (e.g. for `Backup.ps1`):  
+To allow a PowerShell script to run with a double-click, you have two choices:
+1. Set the system wide execution policy for PowerShell scripts, as described by [Microsoft](http://go.microsoft.com/fwlink/?LinkID=135170).
+2. Create a Windows Shortcut with this target (e.g. for `Backup.ps1`):  
   `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe –ExecutionPolicy Unrestricted –NoProfile –File C:\My\WimLib\lib\Backup.ps1`
 
 But beware that Windows shortcuts always contain absolute paths!

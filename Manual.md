@@ -186,3 +186,6 @@ To allow a PowerShell script to run with a double-click, you have two choices:
 
 But beware that Windows shortcuts always contain absolute paths!
 These may act surprisingly if running this script from the live system or a backup USB system.
+
+#### Shrink Volume
+After formatting a volume, Windows places some internal NTFS data as system files roughly at the center of the volume. As a consequence, if you try to shrink a volume, Windows will typically allow you to do so by up to 50% but no more. But if you backup and restore the volume system, the volume is formatted again and the unmovable system files will be placed at the center of the new volume. So by repeating the steps - shrink, backup, restore - you can shrink a volume down to the size that is actually occupied by data.

@@ -189,3 +189,17 @@ These may act surprisingly if running this script from the live system or a back
 
 #### Shrink Volume
 After formatting a volume, Windows places some internal NTFS data as system files roughly at the center of the volume. As a consequence, if you try to shrink a volume, Windows will typically allow you to do so by up to 50% but no more. But if you backup and restore the volume system, the volume is formatted again and the unmovable system files will be placed at the center of the new volume. So by repeating the steps - shrink, backup, restore - you can shrink a volume down to the size that is actually occupied by data.
+
+#### Create Bootable Virtual Disk
+If you create a new virtual machine in Hyper-V, the default disk is not fit to host a Windows 10 system right away. I was unable to make a restored image bootable using bcdboot as described on some sites. So to create a new virtual machine from your existing WIM backup,
+1. Download an ISO image from Microsoft with a Windows 10 installation.
+2. Attach the ISO file as virtual DVD to your virtual machine.
+3. Start the virtual machine and let Windows install itself.  
+   You'll need to delete the largest existing partition and let the setup create its own partitions.
+4. Shut down Windows in the virtual machine as soon as the OOBE program allows you to do so.
+5. Mount the new VHDX file of your virtual machine using the context menu.
+6. Restore the backup to the only visible volume on the virtual drive,
+overwriting the fresh installation.
+7. Detach / Eject the logical drive that has been mapped to the VHDX file.
+8. Start the virtual machine again.
+9. Depending on the type of Windows license you have, you may have to activate Windows (in the VM) again or obtain and enter a different license key into the system settings page.

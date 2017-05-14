@@ -171,7 +171,7 @@ The script contains a `--- Configuration ---` section with the following paramet
 | --------- | ------- | -----------
 | `$Global:runInteractive` | `$true` | If `$true`, all parameters can be entered interactively and have to be confirmed. If `$false`, the parameters in this section are used for the restore and all dialogs and queries are skipped.
 | `$Global:useFileDialogs` | `$true` | If `$true`, a Windows Forms OpenFileDialog is opened to interactively select the WIM file. If `$false`, the path has to be entered as string.
-| `$Global:mountFolder` | `'C:\Mounted'` | The directory to mount the image to. This must *not* exist.
+| `$Global:mountFolder` | `'C:\Mounted'` | The directory the image is currently mounted to. This *must* exist.
 | `$Global:updateImage` | `$false` | If `$true`, the image contents is updated from the changes made in the mount folder. This requires that the folder has *not* been mounted read-only.
 
 ### WARNING

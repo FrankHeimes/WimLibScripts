@@ -27,7 +27,7 @@ SOFTWARE.
 1. The scripts have been developed with PowerShell 5.0.  
    I don't know if they work with previous versions of PowerShell.
 2. The scripts use the [WimLib](https://wimlib.net) library. Download it from https://wimlib.net.
-3. To run the scripts `Backup.ps1` and `Restore.ps1`, you need Administrator privileges.
+3. To run the scripts `Backup.ps1`, `Restore.ps1`, `MountImage.ps1`, and `UnmountImage.ps1`, you need Administrator privileges.
 4. To restore an image to the live Windows system, you need a bootable medium,
    e.g. a Windows volume on a USB drive or an installation CD.
 5. Since both, WimLib as well as PowerShell, are available for Linux,
@@ -57,7 +57,7 @@ http://go.microsoft.com/fwlink/?LinkID=135170. Do you want to change the executi
 ```
 To continue the script, answer `Y`.
 
-The scripts `Backup.ps1` and `Restore.ps1` restart itself with Administrator privileges if it is started from a limited account.
+The scripts that require elevated privileges restart themselves with Administrator privileges if started from a limited account.
 
 All scripts contain a configuration section with default parameters.
 You can run the scripts interactively or execute them using the default parameters.
@@ -139,6 +139,46 @@ The script contains a `--- Configuration ---` section with the following paramet
 
 ---
 
+## MountImage.ps1
+
+This script mounts a backup image from a WIM file. It queries all required parameters.
+
+### Configuration
+The script contains a `--- Configuration ---` section with the following parameters
+
+| Parameter | Default | Explanation
+| --------- | ------- | -----------
+| `$Global:runInteractive` | `$true` | If `$true`, all parameters can be entered interactively and have to be confirmed. If `$false`, the parameters in this section are used for the mount operation and all dialogs and queries are skipped.
+| `$Global:useFileDialogs` | `$true` | If `$true`, a Windows Forms OpenFileDialog is opened to interactively select the WIM file. If `$false`, the path has to be entered as string.
+| `$Global:mountFolder` | `'C:\Mounted'` | The directory to mount the image to. This must *not* exist.
+| `$Global:wimFile` | `'M:\Backup\System.wim'` | The source WIM file to take the backup image from.
+| `$Global:imageIndex` | 9999 | The image index in the WIM file to mount. If this number is too high, then the highest available index is picked.
+| `$Global:readOnly` | `$true` | If `$true`, the image is mounted read-only and protected against changes. If `$false`, you can update the image contents.
+
+### WARNING
+**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!
+
+---
+
+## UnmountImage.ps1
+
+This script unmounts a backup image from a mounted folder. It queries all required parameters.
+
+### Configuration
+The script contains a `--- Configuration ---` section with the following parameters
+
+| Parameter | Default | Explanation
+| --------- | ------- | -----------
+| `$Global:runInteractive` | `$true` | If `$true`, all parameters can be entered interactively and have to be confirmed. If `$false`, the parameters in this section are used for the restore and all dialogs and queries are skipped.
+| `$Global:useFileDialogs` | `$true` | If `$true`, a Windows Forms OpenFileDialog is opened to interactively select the WIM file. If `$false`, the path has to be entered as string.
+| `$Global:mountFolder` | `'C:\Mounted'` | The directory to mount the image to. This must *not* exist.
+| `$Global:updateImage` | `$false` | If `$true`, the image contents is updated from the changes made in the mount folder. This requires that the folder has *not* been mounted read-only.
+
+### WARNING
+**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!
+
+---
+
 ### Known Issues
 The following are merely issues of the [WimLib](https://wimlib.net) library or the
 [WIM](https://de.wikipedia.org/wiki/Windows_Imaging_Format_Archive) file format as such,
@@ -155,28 +195,14 @@ and could confirm that the actual contents is always identical.
 So the consumed space, as reported by Windows, can safely be assumed to be merely an *educated guess*.
 - On a Windows 8.1 system, when restoring a volume, the `-Force` option of the `Format-Volume` cmdlet is ignored,
 resulting in an additional unnecessary confirmation query after the WIM file has been verified. On Windows 10, the option is respected.
-- The Windows `DISM` command as well as the `Mount-WindowsImage` PowerShell cmdlet are supposedly able to mount a WIM image.
-But both report *"Attempted to load a file with a wrong format"* and the `dism.log` reports a *"version/header mismatch"* problem.
 - When restoring an image, WimLib typically issues `[WARNING] Ignoring FILE_ATTRIBUTE_SPARSE_FILE of nn files`
 for a small number `nn` of files. To my knowledge, this has no negative side effects.
 
 ## Tips
 #### Browse and Extract
 Use the free [7-Zip](http://www.7-zip.org/) archiver (version 16.04 or newer) to open and browse a WIM file or to extract a limited number of files.
+This is faster than mounting and unmounting the image.
 You will probably want to use the `Restore.ps1` script to extract the entire volume as this also recreates all file meta data and permissions.
-
-#### Administer
-For administering an image of the WIM file, proceed as follows:
-1. Open the Windows Disk Management and create a new virtual disk or shrink an existing volume to make space for a new *real* volume.
-2. Initialize the disk and create a new simple volume.
-3. Format the volume as NTFS and assign a drive letter.
-4. Restore an image of the WIM file to that disk.
-5. Inspect and/or modify its contents.
-6. Create a backup of the volume on the virtual disk and add it as new image to the WIM file.
-
-Due to the way a WIM file is structured, only your changes may increase its size.
-So leaving the old image in the WIM file usually does not waste (much) space.
-Of course, if you deleted substantial portions of the volume, you're better off creating a new WIM file.
 
 #### Quick Launch
 To allow a PowerShell script to run with a double-click, you have two choices:

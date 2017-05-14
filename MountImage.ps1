@@ -1,4 +1,4 @@
-# Restore a volume, Version 1.1.17197.0
+# Mount a backup image, Version 1.1.17197.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -32,20 +32,22 @@ if (!(New-Object Security.Principal.WindowsPrincipal $([Security.Principal.Windo
 
 # Whether or not to run interactively.
 #  W A R N I N G :  When setting this to $false, make sure all remaining parameters are correct!
-#                   I'm really serious - You can annihilate your operating system with one click!
 $Global:runInteractive = $true
 
 # Whether or not to use file dialog boxes for more convenient file selection.
 $Global:useFileDialogs = $true
 
-# The target volume to restore. This can NOT be the live system.
-$Global:volume = 'G:\'
+# The directory to mount the image to. This must NOT exist.
+$Global:mountFolder = 'C:\Mounted'
 
 # The source file to take the image from.
 $Global:wimFile = 'M:\Backup\System.wim'
 
-# The image index in the WIM file to restore. Use highest available if possible
+# The image index in the WIM file to mount. Use highest available if possible
 $Global:imageIndex = 9999
+
+# Whether or not to mount the image read-only.
+$Global:readOnly = $true
 
 # -----------------------------------------------------------
 
@@ -83,31 +85,17 @@ function Configure-Host
 # Explain what the script does and let user confirm execution
 function Confirm-Execution
 {
-	"`n   R E S T O R E   V O L U M E`n"
+	"`n   M O U N T   I M A G E`n"
 	"This script will perform the following tasks:"
-	"------------------------------------------------"
+	"---------------------------------------------"
 	" 1. Let you choose the name of a WIM file."
-	" 2. Let you choose an image from the WIM file to restore."
-	" 3. Let you choose which volume to restore."
-	" 4. Verify the integrity of the WIM file."
-	" 5. Quick format the volume as NTFS."
-	" 6. Restore the selected image to the formatted volume."
+	" 2. Let you choose an image from the WIM file to mount."
+	"    Note: SOLID images are not supported."
+	" 3. Query whether or not to mount the image read-only."
+	" 4. Query the name of a mount folder."
+	" 5. Create the mount folder."
+	" 6. Mount the seleted image into that folder."
 	if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }
-}
-
-# Let user select one of the available volumes to restore;
-# The live volume, the CDRom, and the drive holding the WIM file is skipped.
-function Select-Volume
-{
-	"`nSelect a volume to restore."
-	"This must NEITHER be the live system ($env:SystemDrive), NOR the volume holding the WIM file!"
-	# Name = Caption = DeviceID, Optionally interesting: VolumeSerialNumber
-	Get-WmiObject Win32_logicaldisk | ?{ $_.Name -ne "${env:SystemDrive}" -and $_.Name -ne "$(Split-Path -Qualifier $wimFile)" -and $_.DriveType -eq 3 } | `
-	Select Name,VolumeName,FileSystem,Description,@{Name="Size[GB]"; Expression={[Math]::Ceiling($_.Size / 1GB)}} | `
-	Format-Table -AutoSize
-	$answer = Read-Host "Enter the drive letter of the volume to restore ($($volume.TrimEnd(':\')))"
-	if (![string]::IsNullOrEmpty($answer)) { $Global:volume = $answer }
-	$Global:volume = $volume.ToUpper().TrimEnd(':\') + ':\'
 }
 
 # Let user select or enter a WIM file.
@@ -155,94 +143,48 @@ function Select-ImageIndex
 		  if ([int64]$Matches[2] -ge 1GB) { $divider = 1GB ; $unit = " GB" } else { $divider = 1MB ; $unit = " MB" }
 		  $Matches[1] + [Math]::Ceiling($Matches[2] / $divider).ToString("N0") + $unit
 	   } else { $_ }}
-	$answer = Read-Host "`nEnter 1-based 'Index' of the image to restore ($imageIndex)"
+	$answer = Read-Host "`nEnter 1-based 'Index' of the image to mount ($imageIndex)"
 	if (![string]::IsNullOrEmpty($answer)) { $Global:imageIndex = [int]$answer }
 }
 
-# Test if the selected volume is the live volume, if yes, report this and exit script 
-function Reject-LiveVolume
+# Query whether or not to mount the image read-only
+function Query-ReadOnly
 {
-	if ($volume.TrimEnd(':\') -eq $env:SystemDrive.TrimEnd(':\'))
-		{ Throw "You cannot restore to the live system $env:SystemDrive\" }
-}
-
-# Warn user if the target volume contains a page file. That may or may not be in use.
-function Warn-AboutPageFile
-{
-	Get-WmiObject Win32_PageFileUsage | %{ $pageFilePath = $_.Name ; [int]$pageFileUse = $_.CurrentUsage }
-	$pageFile = $volume.TrimEnd(':\') + ":\pagefile.sys"
-	if ((Test-Path $pageFile) -and ($pageFilePath -eq $pageFile) -and ($pageFileUse -gt 0)) {
-		"`nWarning: The currently active paging file '$pageFile' may render the volume '$volume' read-only."
-		"In the advanced system settings, make sure that '$pageFile' is not ACTIVELY being used."
-		"Verify again that '$volume' is the correct volume!"
-		if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }
-	}
-}
-
-# Warn user if the target volume is too small to hold the entire image.
-function Warn-AboutSmallVolume
-{
-	[int64]$volumeSize = Get-WmiObject Win32_logicaldisk | ?{ $_.Name -eq $volume.TrimEnd('\') } | %{ $_.Size }
-	[int64]$imageSize = 0
-	if (ImageX info, $wimFile, $imageIndex | ?{ $_ -match 'Total Bytes:\s*(\d+)' })
-		{ $imageSize = $Matches[1] }
-
-	if ($imageSize -gt $volumeSize) {
-		"`nWarning: The volume '$volume' might be too small to hold the entire image."
-		"The volume size is just $([Math]::Round($volumeSize / 1GB,0).ToString('N0')) GB, but the image size may be up to $([Math]::Ceiling($imageSize / 1GB).ToString('N0')) GB."
-		"You will be able to extract some of the image files but the"
-		"volume may not be complete and it might be corrupted."
-		if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }
-	}
+	$Global:readOnly = ((Read-Host "`nDo you intend to modify the mounted contents and update`nthe image in '$wimFile' (Y/N)?") -ne 'y')
 }
 
 # Let user confirm all selected parameters before commencing operation. Abort script if user does not confirm.
 function Confirm-Parameters
 {
-	"`nVolume '$volume' will be formatted. Then image '$imageIndex' from the"
-	"WIM file '$wimFile' will be applied to the volume."
-	"`n W A R N I N G"
-	"   All data currently on volume '$volume' will be deleted permanently!"
+	if ($readOnly) { $access = 'read-only' } else  { $access = 'writable' }
+	"`nImage $imageIndex from '$wimFile' will be mounted into folder '$mountFolder' and will be $access ..."
 	if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }
-	"`nNote: You can still abort the script (at your own risk!) as long as the volume formatting has not begun."
 }
 
-# Verifies the integrity of the WIM file
-function Verify-WIMFile
+# Create the mount folder. Reject existing folders to avoid data corruption.
+function Create-Folder
 {
-	ImageX verify, $wimFile
+	if (Test-Path $mountFolder)
+		{ Throw "Folder '$mountFolder' already exists. Please specify a non-existing folder." }
+
+	[void](New-Item -Type Directory $mountFolder)
 }
 
-# Format the target volume. Throw on failure.
-function Format-TargetVolume
+# Mount the image into the newly created folder
+function Mount-Volume
 {
-	$volumeName = Get-WmiObject Win32_logicaldisk | ?{ $_.Name -eq $volume.TrimEnd('\') } | %{ $_.VolumeName }
-	if ([string]::IsNullOrEmpty($volumeName)) { $volumeName = 'Restored' }
-	"`nFormating volume '$volume' ($volumeName) ..."
-	$errorCount = $Error.Count
-	Format-Volume -DriveLetter $volume.TrimEnd(':\') -FileSystem 'NTFS' -NewFileSystemLabel $volumeName -Force
-	if (($LastExitCode -ne 0) -or ($Error.Count -gt $errorCount))
-		{ Throw "Format-Volume failed" }
-
-	# Without this delay, the summary of Format-Volume appear later in the output, mixed with other messages.
-	Start-Sleep 1
+	"`nMounting image $imageIndex from '$wimFile' to mount folder '$mountFolder' ..."
+	"This may take a few minutes ..."
+	$dismArgs = @{ImagePath = $wimFile; Index = $imageIndex; Path = $mountFolder; Optimize = $true; CheckIntegrity = $true}
+	if ($readOnly) { $dismArgs['ReadOnly'] = $true }
+	Import-Module DISM
+	Mount-WindowsImage @dismArgs
+	"`nNote: The image is mounted sparsly, i.e. folders and files are only mounted if you access them."
+	"        As a side effect, the total number of files and folders reported by Windows explorer may not be correct."
 }
 
-# Format the target partition before restoring the contents
-function Restore-Volume
-{
-	"`nRestoring image $imageIndex from '$wimFile' to partition '$volume' ..."
-	ImageX apply, $wimFile, $imageIndex, $volume
-}
-
-# Compute and report the execution time w.r.t. the provided start time
-function Report-ExecutionTime([DateTime]$startTime)
-{
-	"`nRestore ran for " + ((Get-Date) - $startTime).ToString("h\:mm\:ss")
-}
-
-# Explain script, collect imputs from user and perform restore operation
-function Run-Restore
+# Explain script, collect imputs from user and perform mount operation
+function Run-MountImage
 {
 	Try {
 		if ($runInteractive) {
@@ -253,19 +195,11 @@ function Run-Restore
 		Get-MaxImageIndex
 		if ($runInteractive) {
 			Select-ImageIndex
-			Select-Volume
-		}
-		Reject-LiveVolume
-		if ($runInteractive) {
-			Warn-AboutPageFile
-			Warn-AboutSmallVolume
+			Query-ReadOnly
 			Confirm-Parameters
 		}
-		$startTime = Get-Date
-		Verify-WIMFile
-		Format-TargetVolume
-		Restore-Volume
-		Report-ExecutionTime $startTime
+		Create-Folder
+		Mount-Volume
 		if ($runInteractive)
 			{ Read-Host "`nDone. Press Enter to finish" }
 	}
@@ -277,4 +211,4 @@ function Run-Restore
 }
 
 Set-Location ($MyInvocation.InvocationName | Split-Path -Parent)
-Run-Restore
+Run-MountImage

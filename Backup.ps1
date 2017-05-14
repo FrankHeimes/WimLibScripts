@@ -1,4 +1,4 @@
-# Backup a volume, Version 1.0.17114.1
+# Backup a volume, Version 1.1.17197.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -118,7 +118,7 @@ function Select-Volume
 	$Global:volume = $volume.ToUpper().TrimEnd(':\') + ':\'
 }
 
-# Let user select or enter a WIM file. Aborts script if user hits 'Abort'
+# Let user select or enter a WIM file.
 function Get-WIMFilename
 {
 	$initialFolder = Split-Path -Parent $wimFile
@@ -172,6 +172,7 @@ function Query-CleanMgr
 # Run Windows Clean Manager if configured
 function Run-CleanMgr
 {
+	# cleanmgr /D C    für Anwendung auf C:\
 	if ($runCleanMgr)
 		{ cleanmgr /sagerun:1 | Out-Null }  # | Out-Null waits for clean manager to finish
 }
@@ -230,7 +231,9 @@ function Create-Image
 		$command = 'capture'
 		$Global:newWIMFile = $true
 	}
-	ImageX $command, $volume, $wimFile, $imageName, --boot, --check, --solid, --snapshot
+	ImageX $command, $volume, $wimFile, $imageName, --boot, --check, --snapshot
+		# Optional: Add option  --solid  to create a solid archive.
+		#           As that produces somewhat smaller files, these cannot be mounted (limitation of DISM).
 }
 
 # Verifies the integrity of the WIM file

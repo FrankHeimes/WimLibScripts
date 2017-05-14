@@ -1,4 +1,4 @@
-# List image contents, Version 1.0.17114.1
+# List image contents, Version 1.1.17197.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -79,7 +79,7 @@ function Confirm-Execution
 	if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }
 }
 
-# Let user select or enter a WIM file. Aborts script if user hits 'Abort'
+# Let user select or enter a WIM file.
 function Get-WIMFilename
 {
 	$initialFolder = Split-Path -Parent $wimFile

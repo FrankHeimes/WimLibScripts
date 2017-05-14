@@ -156,7 +156,7 @@ The script contains a `--- Configuration ---` section with the following paramet
 | `$Global:readOnly` | `$true` | If `$true`, the image is mounted read-only and protected against changes. If `$false`, you can update the image contents.
 
 ### WARNING
-**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!
+**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!**
 
 ---
 
@@ -175,7 +175,7 @@ The script contains a `--- Configuration ---` section with the following paramet
 | `$Global:updateImage` | `$false` | If `$true`, the image contents is updated from the changes made in the mount folder. This requires that the folder has *not* been mounted read-only.
 
 ### WARNING
-**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!
+**When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!**
 
 ---
 

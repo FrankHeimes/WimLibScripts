@@ -1,4 +1,4 @@
-# Restore a volume, Version 1.1.17197.0
+# Restore a volume, Version 1.1.17201.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -102,7 +102,8 @@ function Select-Volume
 	"`nSelect a volume to restore."
 	"This must NEITHER be the live system ($env:SystemDrive), NOR the volume holding the WIM file!"
 	# Name = Caption = DeviceID, Optionally interesting: VolumeSerialNumber
-	Get-WmiObject Win32_logicaldisk | ?{ $_.Name -ne "${env:SystemDrive}" -and $_.Name -ne "$(Split-Path -Qualifier $wimFile)" -and $_.DriveType -eq 3 } | `
+    if ($wimFile.StartsWith('\\')) { $qualifier = '0' } else { $qualifier = Split-Path -Qualifier $wimFile }
+	Get-WmiObject Win32_logicaldisk | ?{ $_.Name -ne "${env:SystemDrive}" -and $_.Name -ne $qualifier -and $_.DriveType -eq 3 } | `
 	Select Name,VolumeName,FileSystem,Description,@{Name="Size[GB]"; Expression={[Math]::Ceiling($_.Size / 1GB)}} | `
 	Format-Table -AutoSize
 	$answer = Read-Host "Enter the drive letter of the volume to restore ($($volume.TrimEnd(':\')))"

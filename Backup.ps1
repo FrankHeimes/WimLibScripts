@@ -1,4 +1,4 @@
-# Backup a volume, Version 1.1.17197.0
+# Backup a volume, Version 1.1.17201.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -149,7 +149,7 @@ function Get-WIMFilenameDlg
 # Test if the WIM file is on the volume that is to be backed up, if yes, report this and exit script 
 function Reject-VolumeConflict
 {
-	if ($volume -eq "$(Split-Path -Qualifier $wimFile)\") {
+	if (!$wimFile.StartsWith('\\') -and $volume -eq "$(Split-Path -Qualifier $wimFile)\") {
 		Throw "The backup of volume '$volume' cannot be written to the WIM file '$wimFile' on that same volume."
 	}
 }
@@ -210,7 +210,7 @@ function Confirm-Parameters([string]$wimFileBackup)
 {
 	''
 	if ($runCleanMgr) { "The Windows Clean Manager will be called." }
-	if ($copyWIMFile) { "The existing WIM file '$wimFile' will be copied as '$wimFileBackup'." }
+	if ($copyWIMFile) { "The existing WIM file '$wimFile' will be copied`nas '$wimFileBackup'." }
 	"A backup of volume '$volume' with the name '$imageName'"
 	"will be added to the WIM file '$wimFile'"
 	if ((Read-Host "`nContinue (Y/N)?") -ne 'y') { Exit }

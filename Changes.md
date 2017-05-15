@@ -22,6 +22,10 @@ SOFTWARE.
 
 # WimLibScripts CHANGES
 
+## Version 1.1.17201.0
+
+* Fixed error message for WIM files on network shares.
+
 ## Version 1.1.17197.0
 
 * Removed the `--solid` flag to make the resulting images mountable by DISM.

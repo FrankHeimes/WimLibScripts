@@ -1,4 +1,4 @@
-# Backup a volume, Version 1.1.17201.0
+# Backup a volume, Version 1.1.17242.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -231,7 +231,7 @@ function Create-Image
 		$command = 'capture'
 		$Global:newWIMFile = $true
 	}
-	ImageX $command, $volume, $wimFile, $imageName, --boot, --check, --snapshot
+	ImageX $command, $volume, $wimFile, $imageName, --boot, --check, --snapshot, --config=Backup.ini
 		# Optional: Add option  --solid  to create a solid archive.
 		#           As that produces somewhat smaller files, these cannot be mounted (limitation of DISM).
 }

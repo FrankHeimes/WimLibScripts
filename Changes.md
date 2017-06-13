@@ -22,6 +22,10 @@ SOFTWARE.
 
 # WimLibScripts CHANGES
 
+## Version 1.1.17242.0
+
+* Made exclusion list explicit in backup.ini.
+
 ## Version 1.1.17201.0
 
 * Fixed error message for WIM files on network shares.

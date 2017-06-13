@@ -88,6 +88,9 @@ The script contains a `--- Configuration ---` section with the following paramet
 | `$Global:wimFile` | `'M:\Backup\System.wim'` | The target WIM file to add the backup image to. This cannot be the volume to backup and it should not be on the same physical drive.
 | `$Global:imageName` | Long date and time | A descriptive name for the new backup image. |
 
+The file `Backup.ini`, located in the same directory as Backup.ps1, contains the exclusion list.
+You may add additional files and folders to exclude from backup.
+
 ### WARNING
 **When setting `$Global:runInteractive` to `$false`, make sure all remaining parameters are correct!**
 

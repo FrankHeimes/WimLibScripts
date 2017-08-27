@@ -1,4 +1,4 @@
-# Backup a volume, Version 1.1.17242.0
+# Backup a volume, Version 1.1.17347.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -64,6 +64,8 @@ function ImageX([string[]]$wimlibArgs)
 	''
 	$errorCount = $Error.Count
 	.\wimlib-imagex.exe $wimlibArgs
+	if ($LastExitCode -eq 89)
+		{ "`r`nThe selected volume does not support filesystem snapshot - retrying without ..." }
 	if (($LastExitCode -ne 0) -or ($Error.Count -gt $errorCount))
 		{ Throw "wimlib-imagex.exe failed" }
 }
@@ -231,9 +233,23 @@ function Create-Image
 		$command = 'capture'
 		$Global:newWIMFile = $true
 	}
-	ImageX $command, $volume, $wimFile, $imageName, --boot, --check, --snapshot, --config=Backup.ini
-		# Optional: Add option  --solid  to create a solid archive.
-		#           As that produces somewhat smaller files, these cannot be mounted (limitation of DISM).
+
+	# Optional: Add option  '--solid'  to create a solid archive.
+	#           As that produces somewhat smaller files, these cannot be mounted (limitation of DISM).
+    [Collections.ArrayList]$wimlibArgs = $command, $volume, $wimFile, $imageName, '--boot', '--check', '--snapshot', '--config=Backup.ini'
+
+    Try
+    {
+	    $ErrorActionPreference = 'Stop'
+        # Use the snapshot function. Active file systems require this.
+	    ImageX $wimlibArgs
+    }
+    Catch
+    {
+        # Logic file systems don't support --snapshot, so try again without that option and let exceptions pass.
+        $wimlibArgs.Remove('--snapshot')
+    	ImageX $wimlibArgs
+    }
 }
 
 # Verifies the integrity of the WIM file

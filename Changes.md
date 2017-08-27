@@ -22,6 +22,10 @@ SOFTWARE.
 
 # WimLibScripts CHANGES
 
+## Version 1.1.17347.0
+
+* Support for volumes that do not support filesystem snapshots.
+
 ## Version 1.1.17242.0
 
 * Made exclusion list explicit in backup.ini.

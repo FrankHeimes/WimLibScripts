@@ -22,6 +22,11 @@ SOFTWARE.
 
 # WimLibScripts CHANGES
 
+## Version 1.1.17491.0
+
+* Clean Manager and WIM file copy execute in parallel.
+* Fixed mal-formed characters (hypen and space).
+
 ## Version 1.1.17347.0
 
 * Support for volumes that do not support filesystem snapshots.

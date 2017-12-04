@@ -1,4 +1,4 @@
-# Mount a backup image, Version 1.1.17197.0
+# Mount a backup image, Version 1.1.17491.0
 #
 # Original work Copyright (c) 2017 Dr. Frank Heimes (twitter.com/DrFGHde, www.facebook.com/dr.frank.heimes)
 #
@@ -23,7 +23,7 @@
 param([switch]$elevated)
 if (!(New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
   if ($elevated) { Read-Host 'Failed to elevate' }
-  else { Start-Process powershell.exe -Verb RunAs -ArgumentList ('–ExecutionPolicy Unrestricted -noprofile -nologo -file "{0}" -elevated' -f ($myinvocation.MyCommand.Definition)) }
+  else { Start-Process powershell.exe -Verb RunAs -ArgumentList ('-ExecutionPolicy Unrestricted -noprofile -nologo -file "{0}" -elevated' -f ($myinvocation.MyCommand.Definition)) }
   exit
 }
 
@@ -68,16 +68,16 @@ function ImageX([string[]]$wimlibArgs)
 # Moves the window that executes this script to column 40 at the top of the screen
 function Move-WindowToTop
 {
-	$Global:Win32SetWindowPos = Add-Type –memberDefinition '[DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, int uFlags);' `
-	-name 'Win32SetWindowPos' -namespace Win32Functions –passThru
+	$Global:Win32SetWindowPos = Add-Type -memberDefinition '[DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, int uFlags);' `
+	-name 'Win32SetWindowPos' -namespace Win32Functions -passThru
 	[void]$Global:Win32SetWindowPos::SetWindowPos(((Get-Process -Id $pid).MainWindowHandle), 0, 40, 0, 0, 0, 0x4255)
 }
 
 # Make the host window almost the height of the screen and place it at the top
 function Configure-Host
 {
-	$MySize = $host.UI.RawUI.WindowSize
-	$MySize.Height = $host.UI.RawUI.MaxPhysicalWindowSize.Height - 2
+	$MySize = $host.UI.RawUI.WindowSize
+	$MySize.Height = $host.UI.RawUI.MaxPhysicalWindowSize.Height - 2
 	$host.UI.RawUI.set_windowSize($MySize)
 	Move-WindowToTop
 }
